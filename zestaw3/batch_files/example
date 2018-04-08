@@ -1,0 +1,6 @@
+touch file1 file2 file3 file4 
+ls -l
+rm file1 file2 file3 file4
+rm file1 file2 file3 file4
+./memory_leak
+./infinite_loop
