@@ -13,22 +13,26 @@ pid_t pid;
 int state = 0;
 
 void sigint(int signo){
-    printf("\nOdebrano sygnał SIGINT\n");
-    kill(pid, SIGINT);
+    printf("\nOdebrano sygnał SIGINT %d\n", pid);
+    kill(-getpgid(pid), SIGINT);
     exit(0);
+}
+
+
+void run(){
+    setpgrp();
+    execl("date.sh", "date.sh", NULL);
 }
 
 void sigtstp(int signo){
     if(!state){
         printf("\nOczekuję na CTRL+Z - kontynuacja albo CTR+C - zakonczenie programu\n");
         state = 1;
-        kill(pid, SIGINT);
+        kill(-getpgid(pid), SIGINT);
     }
     else{
         pid = fork();
-        if(!pid){
-            execl("date.sh", "date.sh", NULL);
-        }
+        if(!pid) run();
         state = 0;
     }
 }
@@ -41,8 +45,6 @@ int main(){
     signal(SIGINT, &sigint);
     sigaction(SIGTSTP, &act, NULL);
     pid = fork();
-    if(!pid){
-        execl("date.sh", "date.sh", NULL);
-    }
+    if(!pid) run();
     while(1)sleep(1);
 }
