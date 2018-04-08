@@ -13,7 +13,7 @@ pid_t pid;
 int state = 0;
 
 void sigint(int signo){
-    printf("\nOdebrano sygnał SIGINT %d\n", pid);
+    printf("\nOdebrano sygnał SIGINT\n");
     kill(-getpgid(pid), SIGINT);
     exit(0);
 }
@@ -21,7 +21,7 @@ void sigint(int signo){
 
 void run(){
     setpgrp();
-    execl("date.sh", "date.sh", NULL);
+    execl("zad1/date.sh", "date.sh", NULL);
 }
 
 void sigtstp(int signo){
