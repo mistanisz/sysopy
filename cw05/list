@@ -1,0 +1,6 @@
+ps -e
+ps aux | wc -l
+ps -e | wc -l
+ls -l | wc -l
+ps aux | grep root | wc -l
+ps | ps | ps | ps | ps
