@@ -12,18 +12,16 @@
 #include "headers.h"
 
 int client_id;
+int self_id = -1;
 
-void sigint(int signo){
+void client_exit(){
     printf("Finishing client process...\n");
     msgctl(client_id, IPC_RMID, NULL);
     exit(0);
 }
 
-
-int self_id = -1;
-
-void client_exit(int id){
-    msgctl(id, IPC_RMID, NULL);
+void sigint(int signo){
+    client_exit();
 }
 
 void read_stdin(char *text, char *type){
@@ -103,6 +101,9 @@ int main(){
                 break;
             case 'E':
                 snd.msg_type = REQ_END;
+                break;
+            case 'S':
+                client_exit();
                 break;
             default:
                 printf("Unrecognized type: %s\n\n", type);

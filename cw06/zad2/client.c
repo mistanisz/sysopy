@@ -16,7 +16,7 @@ mqd_t client_id = -1;
 int self_id = -1;
 char name[80];
 
-void sigint(int signo){
+void client_exit(){
     printf("Finishing client process...\n");
     mqd_t server_id = mq_open(SERVERNAME, O_WRONLY);
     char message[MSGTXTLEN];
@@ -25,6 +25,10 @@ void sigint(int signo){
     mq_close(server_id);
     mq_unlink(name);
     exit(0);
+}
+
+void sigint(int signo){
+    client_exit();
 }
 
 void read_stdin(char *text, char *type){
@@ -102,6 +106,9 @@ int main(){
             case 'E':
                 t = REQ_END;
                 prio--;
+                break;
+            case 'S':
+                client_exit();
                 break;
             default:
                 printf("Unrecognized type: %s\n\n", type);
