@@ -1,21 +1,22 @@
-COMP	?= -Wall
+PREF	?= run_
 
-make:
-	gcc list_dir.c -o list_dir ${COMP}
-	gcc batch_interpreter.c -o batch_interpreter ${COMP}
-	gcc infinite_loop.c -o infinite_loop ${COMP}
-	gcc memory_leak.c -o memory_leak ${COMP}
-
-run:
-	./batch_interpreter batch_files/example 2 2047
-	./batch_interpreter batch_files/mem 2 2047
-	./batch_interpreter batch_files/cpu 2 2047
-
-list:
-	./list_dir .. "<" "2018-12-31"
-
-clean:
-	rm batch_interpreter infinite_loop list_dir memory_leak
+compile = gcc $(1)/$(2).c -o ${PREF}$(2) -Wall
+clean = rm -f $(1)
 
 
-# zestaw jest kompletny
+make: czad1 czad2
+
+czad1:
+	$(call compile,zad1,zad1)
+
+czad2:
+	$(call compile,zad2,zad2)
+
+
+clean: clean_zad1 clean_zad2
+
+clean_zad1:
+	$(call clean, ${PREF}zad1)
+
+clean_zad2:
+	$(call clean, ${PREF}zad2)
