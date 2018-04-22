@@ -1,6 +1,6 @@
 PREF	?= run_
 
-compile = gcc $(1)/$(2).c -o ${PREF}$(1)_$(2) -Wall
+compile = gcc $(1)/$(2).c -o ${PREF}$(1)_$(2) -Wall -lrt
 clean = rm -f ${PREF}$(1)_$(2)
 
 
