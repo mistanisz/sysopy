@@ -1,0 +1,18 @@
+filters/filter20
+Applying filters/filter20 to images/mountain.ascii.pgm with 1 thread took 3.925929
+Applying filters/filter20 to images/mountain.ascii.pgm with 2 threads took 1.970173
+Applying filters/filter20 to images/mountain.ascii.pgm with 4 threads took 1.740918
+Applying filters/filter20 to images/mountain.ascii.pgm with 8 threads took 1.746616
+Applying filters/filter20 to images/mountain.ascii.pgm with 16 threads took 1.732028
+filters/filter3
+Applying filters/filter3 to images/mountain.ascii.pgm with 1 thread took 0.159121
+Applying filters/filter3 to images/mountain.ascii.pgm with 2 threads took 0.94364
+Applying filters/filter3 to images/mountain.ascii.pgm with 4 threads took 0.54513
+Applying filters/filter3 to images/mountain.ascii.pgm with 8 threads took 0.44173
+Applying filters/filter3 to images/mountain.ascii.pgm with 16 threads took 0.44040
+filters/filter65
+Applying filters/filter65 to images/mountain.ascii.pgm with 1 thread took 41.188407
+Applying filters/filter65 to images/mountain.ascii.pgm with 2 threads took 20.593526
+Applying filters/filter65 to images/mountain.ascii.pgm with 4 threads took 18.574503
+Applying filters/filter65 to images/mountain.ascii.pgm with 8 threads took 18.24286
+Applying filters/filter65 to images/mountain.ascii.pgm with 16 threads took 17.985842

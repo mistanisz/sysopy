@@ -61,9 +61,7 @@ image_str open_image(char *filename){
     char line[100];
     int val;
     FILE *image_fd = fopen(filename, "r");
-    int c = 0;
     fgets(line, sizeof(line), image_fd);
-    //TODO add check if proper file
     image_str ret;
     fgets(line, sizeof(line), image_fd);
     while(line[0] == '#'){
@@ -137,6 +135,7 @@ void *apply_filter(void * arg){
         for(int j=ti->begin;j<ti->end;++j)
             output[i][j] = count(i, j, ti->c, ti->width, ti->height);        
     free(ti);
+    return NULL;
 }
 
 int main(int argc, char *argv[]){
@@ -166,7 +165,7 @@ int main(int argc, char *argv[]){
     for(int i=0;i<threads;++i)pthread_join(tid[i], NULL);
     gettimeofday(&end, NULL);
     timersub(&end, &begin, &res);
-    printf("Applying filter with %d thread%s took %ld.%ld\n", threads, threads==1 ? "" : "s", res.tv_sec, res.tv_usec);
+    printf("Applying %s to %s with %d thread%s took %ld.%ld\n",argv[3], argv[2], threads, threads==1 ? "" : "s", res.tv_sec, res.tv_usec);
     print(im.width, im.height, argv[4]);
 
     free(tid);
