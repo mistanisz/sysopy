@@ -2,6 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <errno.h>
+#include <time.h>
+#include <sys/time.h>
+#include <pthread.h>
 
 float **filter;
 int **image;
@@ -12,6 +16,19 @@ typedef struct im{
     int height;
 } image_str;
 
+typedef struct thread_info{
+    int width;
+    int height;
+    int begin;
+    int end;
+    int c;
+} thread_info;
+
+void log_err(const char* S){
+fprintf(stderr, "%s: %s\n", S, strerror(errno));
+exit(1);
+}
+
 int open_filter(char *filename){
     char line[100];
     float val;
@@ -20,7 +37,7 @@ int open_filter(char *filename){
     if(fgets(line, sizeof(line), filter_fd)){
         c = atoi(line);
     }
-//    if (c == 0) log_err("Bad filter");
+    if (c == 0) log_err("Bad filter");
     filter = calloc(c, sizeof(float*));
     for(int i =0;i<c;++i){
         filter[i] = calloc(c, sizeof(float));
@@ -99,36 +116,60 @@ int count(int x, int y, int c, int width, int height){
     return round(sum);
 }
 
-void print(int width, int height){
+void print(int width, int height, char* filename){
+    FILE *fp = fopen(filename, "w");
+    fprintf(fp, "P2\n%d %d\n255\n", width, height);
     int a=0;
     for(int i=0;i<height;++i){
         for(int j=0;j<width;++j){
-            printf("%d  ", output[i][j]);
+            fprintf(fp, "%d  ", output[i][j]);
             if(++a==12){
-                printf("\n");
+                fprintf(fp, "\n");
                 a=0;
             }
         }
     }
 }
 
+void *apply_filter(void * arg){
+    thread_info *ti = (thread_info *) arg;
+    for(int i=0;i<ti->height;++i)
+        for(int j=ti->begin;j<ti->end;++j)
+            output[i][j] = count(i, j, ti->c, ti->width, ti->height);        
+    free(ti);
+}
+
 int main(int argc, char *argv[]){
-//    if(argc != 2) log_err("Bad number of arguments");
-    image_str im= open_image(argv[1]);
-    int c = open_filter(argv[2]);
+    if(argc != 5) log_err("Bad number of arguments");
+    image_str im= open_image(argv[2]);
+    int c = open_filter(argv[3]);
+    int threads = atoi(argv[1]);
 
     output = calloc(im.width, sizeof(int*));
     for(int i =0;i<im.height;++i){
         output[i] = calloc(im.width, sizeof(int));
     }
 
-    for(int i=0;i<im.height;++i){
-        for(int j=0;j<im.width;++j){
-            output[i][j] = count(i, j, c, im.width, im.height);        
-        }
+    struct timeval begin, end, res;
+    pthread_t *tid = calloc(threads, sizeof(pthread_t));
+    gettimeofday(&begin, NULL);
+    for(int i=0;i<threads;++i){
+        thread_info *ti = malloc(sizeof(thread_info));
+        ti->width = im.width;
+        ti->height = im.height;
+        ti->c = c;
+        int diff = im.width/threads;
+        ti->begin = diff*i;
+        ti->end = i<threads-1 ? ti->begin+diff : ti->width;
+        pthread_create(&tid[i], NULL, apply_filter, (void *)ti);
     }
-    print(im.width, im.height);
+    for(int i=0;i<threads;++i)pthread_join(tid[i], NULL);
+    gettimeofday(&end, NULL);
+    timersub(&end, &begin, &res);
+    printf("Applying filter with %d thread%s took %ld.%ld\n", threads, threads==1 ? "" : "s", res.tv_sec, res.tv_usec);
+    print(im.width, im.height, argv[4]);
 
+    free(tid);
     for(int i=0;i<c;++i)free(filter[i]);
     free(filter);
     for(int i=0;i<im.height;++i)free(image[i]);
