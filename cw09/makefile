@@ -1,7 +1,23 @@
-compile = gcc $(1)/$(2).c -o ${PREF}$(2) -Wall -lpthread -lm
+PREF ?= run_
+compile = gcc $(1)/$(2).c -o ${PREF}$(1) -Wall -lpthread -lm
+clean = rm -f ${PREF}$(1)
 
-all:
+	
+czad1:
 	$(call compile,zad1,main)
 
-example:
-	./main 100 100 100 pan-tadeusz-czyli-ostatni-zajazd-na-litwie.txt 25 = 1 0
+czad2:
+	$(call compile,zad2,main)
+
+make: czad2 czad1
+
+clean: 
+	$(call clean,zad1,main)
+	$(call clean,zad2,main)
+	
+
+example_zad1: czad1
+	./run_zad1 100 100 100 pan-tadeusz-czyli-ostatni-zajazd-na-litwie.txt 40 '<' 0 0
+
+example_zad2: czad2
+	./run_zad2 100 100 100 pan-tadeusz-czyli-ostatni-zajazd-na-litwie.txt 40 '<' 0 0

@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <semaphore.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -8,7 +7,7 @@
 int p_threads, c_threads, size, L, verbose = 0;
 char type;
 
-sem_t producer, *buffer, consumer, counter;
+pthread_mutex_t producer, *buffer, consumer, counter;
 int producer_index = 0, consumer_index = 0;
 FILE *f;
 int finished = 0, filled=0;
@@ -21,35 +20,35 @@ void *producer_thread(void *args){
             continue;
         }
         int index = -1;
-        sem_wait(&producer);
+        pthread_mutex_lock(&producer);
         index = (producer_index++)%size;
-        sem_post(&producer);
-        sem_wait(&buffer[index]);
+        pthread_mutex_unlock(&producer);
+        pthread_mutex_lock(&buffer[index]);
         if(bufor[index]==0){
-            sem_post(&buffer[index]);
+            pthread_mutex_unlock(&buffer[index]);
             char *line = calloc(100, sizeof(char));
-            sem_wait(&producer);
+            pthread_mutex_lock(&producer);
             if(fgets(line, 100, f) == NULL){
-                sem_post(&producer);    
-                sem_wait(&counter);
+                pthread_mutex_unlock(&producer);    
+                pthread_mutex_lock(&counter);
                 finished++;
-                sem_post(&counter);
+                pthread_mutex_unlock(&counter);
                 break;
             }
-            sem_post(&producer);
-            sem_wait(&buffer[index]);
+            pthread_mutex_unlock(&producer);
+            pthread_mutex_lock(&buffer[index]);
             bufor[index] = line;
-            sem_post(&buffer[index]);
-            sem_wait(&counter);
+            pthread_mutex_unlock(&buffer[index]);
+            pthread_mutex_lock(&counter);
             filled++;
-            sem_post(&counter);
+            pthread_mutex_unlock(&counter);
             if(verbose){
                 printf("[P] %d:\t%s\n", index, line);
                 fflush(stdout);
             }
         }
         else {
-            sem_post(&buffer[index]);
+            pthread_mutex_unlock(&buffer[index]);
         }
     }
     return NULL;
@@ -63,14 +62,14 @@ void *consumer_thread(void *args){
         }
         char *line=0;
         if(finished)break;
-        sem_wait(&consumer);
+        pthread_mutex_lock(&consumer);
         int index=(consumer_index++)%size;
-        sem_post(&consumer);
-        sem_wait(&buffer[index]);
+        pthread_mutex_unlock(&consumer);
+        pthread_mutex_lock(&buffer[index]);
         if(bufor[index]){      
             line=bufor[index];
             bufor[index]=0;
-            sem_post(&buffer[index]);
+            pthread_mutex_unlock(&buffer[index]);
             int l = strlen(line), p=0;
             switch(type){
                 case '=':
@@ -86,12 +85,12 @@ void *consumer_thread(void *args){
             if(p)printf("[C] %d:\t%s\n", index, line);
             fflush(stdout);
             free(line);
-            sem_wait(&counter);
+            pthread_mutex_lock(&counter);
             filled--;
-            sem_post(&counter);
+            pthread_mutex_unlock(&counter);
         }
         else {
-            sem_post(&buffer[index]);
+            pthread_mutex_unlock(&buffer[index]);
         }
     }
     return NULL;
@@ -110,12 +109,13 @@ int main(int argc, char* argv[]){
     type = argv[6][0];
     verbose = atoi(argv[7]);
     int nk = atoi(argv[8]);
-    sem_init(&producer, 0, 1);
-    buffer = calloc(size, sizeof(sem_t));
+    buffer = calloc(size, sizeof(pthread_mutex_t));
     bufor = calloc(size, sizeof(char*));
-    for(int i=0;i<size;++i)sem_init(&buffer[i], 0, 1);
-    sem_init(&consumer, 0, 1);
-    sem_init(&counter, 0, 1);
+
+    for(int i=0;i<size;++i)pthread_mutex_init(&buffer[i], NULL);
+    pthread_mutex_init(&producer, NULL);
+    pthread_mutex_init(&consumer, NULL);
+    pthread_mutex_init(&counter, NULL);
     f = fopen(filename, "r");
     
     pthread_t ptid[p_threads];
@@ -136,10 +136,6 @@ int main(int argc, char* argv[]){
         for(int i=0;i<p_threads;++i) pthread_join(ptid[i], NULL);
     }
     fclose(f);
-    sem_destroy(&producer);
-    for(int i=0;i<size;++i)sem_destroy(&buffer[i]);
-    sem_destroy(&consumer);
-    sem_destroy(&counter);
     free(buffer);
     free(bufor);
 }
